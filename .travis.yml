@@ -1,0 +1,29 @@
+sudo: required
+os:
+  - linux
+
+language: go
+go:
+  - 1.9
+
+env:
+  global:
+    - PATH="$PATH:$GOPATH/bin"
+
+# Travis OSX worker has problems running our Go binaries for 1.7 and 1.8,
+# workaround for now is to skip exec for those.
+
+before_install:
+  - git clone https://github.com/edenhill/librdkafka.git
+  - cd librdkafka
+  - ./configure 
+  - make
+  - sudo make install
+  - export PKG_CONFIG_PATH="$HOME/gopath/src/github.com/confluentinc/confluent-kafka-go/tmp-build/lib/pkgconfig"
+  - go get github.com/confluentinc/confluent-kafka-go/kafka
+  - curl -L -s https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
+
+install:
+  - $GOPATH/bin/dep ensure
+  - go build -tags static ./...
